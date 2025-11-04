@@ -1,6 +1,10 @@
 import express from 'express';
-import "dotenv/config";
+import "dotenv/config"
 import localtunnel  from 'localtunnel';
+import {chatbotMessage} from "./utils/chatbot.js"
+import {sendMessage} from "./utils/sendMessage.js"
+
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -34,27 +38,9 @@ app.get("/api/v1/webhook", (req, res) => {
  
 });
 
-// app.get("/api/v1/webhook", (req, res) => {
-//   const verify_token = process.env.VERIFY_TOKEN;
 
-//   const mode = req.query["hub.mode"];
-//   const token = req.query["hub.verify_token"];
-//   const challenge = req.query["hub.challenge"];
 
-//   if (mode && token) {
-//     if (mode === "subscribe" && token === verify_token) {
-//       console.log("✅ WEBHOOK_VERIFIED");
-//       res.status(200).send(challenge);
-//     } else {
-//       console.log("❌ Invalid verify token");
-//       res.sendStatus(403);
-//     }
-//   } else {
-//     res.sendStatus(400);
-//   }
-// });
-
-app.post("/api/v1/webhook", (req, res) => {
+app.post("/api/v1/webhook", async (req, res) => {
   let body = req.body;
 
   if (body.object) {
@@ -69,6 +55,9 @@ app.post("/api/v1/webhook", (req, res) => {
       const from = message.from; // phone number of sender
       const msgBody = message.text?.body;
       console.log(`Received message from ${from}: ${msgBody}`);
+
+      const reply = await chatbotMessage(msgBody);
+      await sendMessage(from, reply);
     }
 
     res.sendStatus(200);
